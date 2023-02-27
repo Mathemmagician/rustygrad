@@ -1,24 +1,95 @@
-// #[macro_use]
-// extern crate impl_ops;
-use std::ops::Add;
+use std::{
+    cell::RefCell,
+    fmt::Debug,
+    ops::{Add, Mul},
+    rc::Rc,
+};
 
-#[derive(Debug)]
-enum Operation {
-    Add,
-    Multiply,
+#[macro_export]
+macro_rules! value {
+    ( $x:expr, $y:expr ) => {{
+        RValue(Rc::new(RefCell::new(Value::new($x, $y))))
+    }};
 }
 
-#[derive(Debug)]
-struct Value<'a> {
+#[derive(Debug, PartialEq, Eq)]
+enum Operation {
+    Add,
+    Mul,
+    Tanh,
+    Relu
+}
+
+#[derive(Eq, PartialEq, Debug)]
+struct RValue(Rc<RefCell<Value>>);
+
+struct Value {
     data: f64,
     label: String,
     grad: f64,
     operation: Option<Operation>,
-    children: Vec<&'a Value<'a>>
+    children: Vec<RValue>,
 }
 
-impl<'a> Value<'a> {
-    fn new(data: f64, label: &str,) -> Value {
+impl Debug for Value {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Value")
+            .field("label", &self.label)
+            .field("data", &self.data)
+            .field("grad", &self.grad)
+            .field("operation", &self.operation)
+            .finish()
+    }
+}
+
+impl RValue {
+    fn new(value: Value) -> RValue {
+        RValue(Rc::new(RefCell::new(value)))
+    }
+
+    fn set_label(&self, label: &str) -> &RValue {
+        self.0.borrow_mut().label = label.to_string();
+        self
+    }
+
+    fn set_grad(&self, grad: f64) -> &RValue {
+        self.0.borrow_mut().grad = grad;
+        self
+    }
+
+    fn add_grad(&self, grad: f64) -> &RValue {
+        self.0.borrow_mut().grad += grad;
+        self
+    }
+
+    fn tanh(&self) -> RValue {
+        let c = (2.0 * self.0.borrow().data).exp();
+        let data = (c - 1.0) / (c + 1.0);
+
+        RValue::new(Value {
+            data,
+            label: String::from("tanh"),
+            grad: 0.0,
+            operation: Some(Operation::Tanh),
+            children: vec![RValue(Rc::clone(&self.0))],
+        })
+    }
+
+    fn relu(&self) -> RValue {
+        let data = self.0.borrow().data.max(0.0);
+
+        RValue::new(Value {
+            data,
+            label: String::from("tanh"),
+            grad: 0.0,
+            operation: Some(Operation::Tanh),
+            children: vec![RValue(Rc::clone(&self.0))],
+        })
+    }
+}
+
+impl Value {
+    fn new(data: f64, label: &str) -> Value {
         Value {
             data,
             label: label.to_string(),
@@ -27,76 +98,114 @@ impl<'a> Value<'a> {
             children: Vec::new(),
         }
     }
-
-    // fn binary_operation( data: f64, operation: Operation, left: &'a Value, right: &'a Value ) -> Value<'a> {
-    //     Value {
-    //         data,
-    //         label: String::new(),
-    //         grad: 0.0,
-    //         operation: Some(operation),
-    //         children: vec![left, right],
-    //     }
-    // }
 }
 
-impl<'a> Add for &'a Value<'a> {
-    type Output = Value<'a>;
-    
-    fn add(self, other: Self) -> Value<'a> {
-        Value {
-            data: self.data + other.data,
-            label: String::new(),
+impl PartialEq for Value {
+    fn eq(&self, other: &Self) -> bool {
+        self.data == other.data
+            && self.grad == other.grad
+            && self.label == other.label
+            && self.operation == other.operation
+            && self.children == other.children
+    }
+}
+
+impl Eq for Value {}
+
+impl Add<&RValue> for &RValue {
+    type Output = RValue;
+
+    fn add(self, other: &RValue) -> RValue {
+        let data = self.0.borrow().data + other.0.borrow().data;
+
+        RValue::new(Value {
+            data,
+            label: String::from("+"),
             grad: 0.0,
             operation: Some(Operation::Add),
-            children: vec![self, other],
+            children: vec![RValue(Rc::clone(&self.0)), RValue(Rc::clone(&other.0))],
+        })
+    }
+}
+
+impl Mul<&RValue> for &RValue {
+    type Output = RValue;
+
+    fn mul(self, other: &RValue) -> RValue {
+        let data = self.0.borrow().data * other.0.borrow().data;
+
+        RValue::new(Value {
+            data,
+            label: String::from("*"),
+            grad: 0.0,
+            operation: Some(Operation::Mul),
+            children: vec![RValue(Rc::clone(&self.0)), RValue(Rc::clone(&other.0))],
+        })
+    }
+}
+
+fn propagate_gradient(value: &RValue) {
+    let operation = &value.0.borrow().operation;
+    let data = value.0.borrow().data;
+    let grad = value.0.borrow().grad;
+
+    if let Some(opp) = operation {
+        // println!("{:?}", opp);
+        let children = &value.0.borrow().children;
+
+        if let Some(left) = &children.get(0) {
+            if let Some(right) = &children.get(1) {
+                match opp {
+                    Operation::Add => {
+                        left.add_grad(grad);
+                        right.add_grad(grad);
+                    }
+                    Operation::Mul => {
+                        left.add_grad(grad * right.0.borrow().data);
+                        right.add_grad(grad * left.0.borrow().data);
+                    }
+                    _ => (),
+                };
+                propagate_gradient(right);
+            } else {
+                match opp {
+                    Operation::Tanh => {
+                        let c = (2.0 * data).exp();
+                        let t = (c - 1.0) / (c + 1.0);
+                        left.add_grad((1.0 - t.powi(2)) * grad);
+                    }
+                    _ => (),
+                }
+            }
+            propagate_gradient(left);
         }
     }
 }
 
-// impl_op!(+ |left: & Value<'a>, right: & Value<'a>| -> Value<'a> {
-
-//     Value::binary_operation(
-//         5.0,
-//         Operation::Add,
-//         left,
-//         right
-//     )
-
-//     // let out = Value::binary_operation(
-//     //     left.data + right.data,
-//     //     Operation::Add,
-//     //     left,
-//     //     right
-//     // );
-//     // let out = Value::new(a.data + b.data, "");
-//     // out._backward = |value: &Value| {
-//     //     a.grad = 1.0 * value.grad;
-//     //     b.grad = 1.0 * value.grad;
-//     // };
-//     // Value {
-//     //     data: a.data * b.data,
-//     //     label: String::new(),
-//     // }
-// });
-
 fn main() {
+    // let a = RValue::new(Value::new(2.0, "a"));
+    let a = value!(2.0, "a");
+    let b = value!(-3.0, "b");
+    let c = &a + &b;
+    c.set_label("c");
+    let d = &a * &c;
+    d.set_label("d");
+    let e = d.tanh();
 
-    let a = Value::new(2.0, "a");
-    let b = Value::new(-3.0, "b");
-    let c = Value::new(2.0, "c");
+    e.set_grad(-1.0);
 
-    // let d = Value::binary_operation(
-    //     5.0,
-    //     Operation::Add,
-    //     &a,
-    //     &b
-    // );
+    println!("a is {:?}", a);
+    println!("b is {:?}", b);
+    println!("c is {:?}", c);
+    println!("d is {:?}", d);
+    println!("e is {:?}", e);
 
-    let d = &a + &b;
+    propagate_gradient(&e);
 
     // dbg!(&x);
     println!("a is {:?}", a);
     println!("b is {:?}", b);
     println!("c is {:?}", c);
     println!("d is {:?}", d);
+    println!("e is {:?}", e);
 }
