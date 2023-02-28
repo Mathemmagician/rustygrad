@@ -1,3 +1,5 @@
+use uuid::Uuid;
+
 #[macro_use]
 extern crate impl_ops;
 use std::{
@@ -30,6 +32,7 @@ impl ops::Deref for Value {
 type BackwardsFn = fn(value: &ValueData);
 
 struct ValueData {
+    uuid: Uuid,
     data: f64,
     grad: f64,
     _backward: Option<BackwardsFn>,
@@ -38,6 +41,7 @@ struct ValueData {
 
 impl Hash for ValueData {
     fn hash<H: Hasher>(&self, state: &mut H) {
+        self.uuid.hash(state);
         self.data.to_bits().hash(state);
         self.grad.to_bits().hash(state);
         self._prev.hash(state);
@@ -68,7 +72,7 @@ impl_op_ex!(+ |a: &Value, b: &Value| -> Value {
     out
 });
 
-impl_op!(-|a: &Value, b: &Value| -> Value { a + (-b) });
+impl_op_ex!(-|a: &Value, b: &Value| -> Value { a + (-b) });
 
 impl_op_ex!(*|a: &Value, b: &Value| -> Value {
     let out = value!(a.borrow().data * b.borrow().data);
@@ -87,6 +91,7 @@ impl_op_ex!(/ |a: &Value, b: &Value| -> Value {
 impl ValueData {
     fn new(data: f64) -> ValueData {
         ValueData {
+            uuid: Uuid::new_v4(),
             data,
             grad: 0.0,
             _backward: None,
@@ -198,7 +203,7 @@ fn main() {
     // f = e**2
     let f = e.pow(&value!(2.0));
     // g = f / 2.0
-    let mut g = &f / &value!(2.0);
+    let mut g = &f / value!(2.0);
     // g += 10.0 / f
     g = &g + &value!(10.0) / &f;
 
@@ -209,7 +214,7 @@ fn main() {
     g.backward();
 
     // print(f'{a.grad:.4f}') # prints 138.8338, i.e. the numerical value of dg/da
-    println!("{:.4}", a.borrow().grad); // 145.7755
+    println!("{:.4}", a.borrow().grad); // 138.8338
 
     // print(f'{b.grad:.4f}') # prints 645.5773, i.e. the numerical value of dg/db
     println!("{:.4}", b.borrow().grad); // 645.5773
