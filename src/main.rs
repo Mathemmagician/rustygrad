@@ -1,5 +1,3 @@
-use uuid::Uuid;
-
 #[macro_use]
 extern crate impl_ops;
 use std::{
@@ -10,6 +8,7 @@ use std::{
     ops,
     rc::Rc,
 };
+use uuid::Uuid;
 
 #[macro_export]
 macro_rules! value {
@@ -155,7 +154,6 @@ impl Value {
             if let Some(backprop) = v.borrow()._backward {
                 backprop(&v.borrow());
             }
-            // println!("{:?}", &v.borrow());
         }
     }
 
@@ -205,7 +203,7 @@ fn main() {
     // g = f / 2.0
     let mut g = &f / value!(2.0);
     // g += 10.0 / f
-    g = &g + &value!(10.0) / &f;
+    g = &g + value!(10.0) / &f;
 
     // print(f'{g.data:.4f}') # prints 24.7041, the outcome of this forward pass
     println!("{:.4}", g.borrow().data); // 24.7041
