@@ -17,7 +17,15 @@ macro_rules! value {
     }};
 }
 
-#[derive(Debug, PartialEq, Eq)]
+struct ValueData {
+    uuid: Uuid,
+    data: f64,
+    grad: f64,
+    _backward: Option<fn(value: &ValueData)>,
+    _prev: Vec<Value>,
+}
+
+#[derive(Debug)]
 struct Value(Rc<RefCell<ValueData>>);
 
 impl ops::Deref for Value {
@@ -28,42 +36,23 @@ impl ops::Deref for Value {
     }
 }
 
-type BackwardsFn = fn(value: &ValueData);
-
-struct ValueData {
-    uuid: Uuid,
-    data: f64,
-    grad: f64,
-    _backward: Option<BackwardsFn>,
-    _prev: Vec<Value>,
-}
-
-impl Hash for ValueData {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.uuid.hash(state);
-        self.data.to_bits().hash(state);
-        self.grad.to_bits().hash(state);
-        self._prev.hash(state);
-    }
-}
-
 impl Hash for Value {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.0.borrow().hash(state);
+        self.borrow().uuid.hash(state);
     }
 }
 
-impl PartialEq for ValueData {
+impl PartialEq for Value {
     fn eq(&self, other: &Self) -> bool {
-        self.data == other.data && self.grad == other.grad && self._prev == other._prev
+        self.borrow().uuid == other.borrow().uuid
     }
 }
 
-impl Eq for ValueData {}
+impl Eq for Value {}
 
 impl_op_ex!(+ |a: &Value, b: &Value| -> Value {
     let out = value!(a.borrow().data + b.borrow().data);
-    out.borrow_mut()._prev = vec![Value(Rc::clone(&a)), Value(Rc::clone(&b))];
+    out.borrow_mut()._prev = vec![Value(Rc::clone(a)), Value(Rc::clone(b))];
     out.borrow_mut()._backward = Some(|value: &ValueData| {
         value._prev[0].borrow_mut().grad += value.grad;
         value._prev[1].borrow_mut().grad += value.grad;
@@ -71,11 +60,9 @@ impl_op_ex!(+ |a: &Value, b: &Value| -> Value {
     out
 });
 
-impl_op_ex!(-|a: &Value, b: &Value| -> Value { a + (-b) });
-
 impl_op_ex!(*|a: &Value, b: &Value| -> Value {
     let out = value!(a.borrow().data * b.borrow().data);
-    out.borrow_mut()._prev = vec![Value(Rc::clone(&a)), Value(Rc::clone(&b))];
+    out.borrow_mut()._prev = vec![Value(Rc::clone(a)), Value(Rc::clone(b))];
     out.borrow_mut()._backward = Some(|value: &ValueData| {
         value._prev[0].borrow_mut().grad += value._prev[1].borrow_mut().data * value.grad;
         value._prev[1].borrow_mut().grad += value._prev[0].borrow_mut().data * value.grad;
@@ -83,9 +70,9 @@ impl_op_ex!(*|a: &Value, b: &Value| -> Value {
     out
 });
 
-impl_op_ex!(/ |a: &Value, b: &Value| -> Value {
-    a * b.pow(&value!(-1.0))
-});
+impl_op!(-|a: &Value| -> Value { a * value!(-1.0) });
+impl_op_ex!(-|a: &Value, b: &Value| -> Value { a + (-b) });
+impl_op_ex!(/ |a: &Value, b: &Value| -> Value { a * b.pow(&value!(-1.0)) });
 
 impl ValueData {
     fn new(data: f64) -> ValueData {
@@ -121,7 +108,7 @@ impl Value {
 
     fn relu(&self) -> Value {
         let out = value!(self.borrow().data.max(0.0));
-        out.borrow_mut()._prev = vec![Value(Rc::clone(&self))];
+        out.borrow_mut()._prev = vec![Value(Rc::clone(self))];
         out.borrow_mut()._backward = Some(|value: &ValueData| {
             if value.data > 0.0 {
                 value._prev[0].borrow_mut().grad += value.grad;
@@ -132,7 +119,7 @@ impl Value {
 
     fn pow(&self, other: &Value) -> Value {
         let out = value!(self.borrow().data.powf(other.borrow().data));
-        out.borrow_mut()._prev = vec![Value(Rc::clone(&self)), Value(Rc::clone(&other))];
+        out.borrow_mut()._prev = vec![Value(Rc::clone(self)), Value(Rc::clone(other))];
         out.borrow_mut()._backward = Some(|value: &ValueData| {
             let base = value._prev[0].borrow().data;
             let p = value._prev[1].borrow().data;
@@ -158,23 +145,14 @@ impl Value {
     }
 
     fn _build_topo(&self, topo: &mut Vec<Value>, visited: &mut HashSet<Value>) {
-        if !visited.contains(&self) {
-            visited.insert(Value(Rc::clone(&self)));
-
+        if !visited.contains(self) {
+            visited.insert(Value(Rc::clone(self)));
+            
             for child in &self.borrow()._prev {
                 child._build_topo(topo, visited);
             }
-            topo.push(Value(Rc::clone(&self)));
+            topo.push(Value(Rc::clone(self)));
         }
-    }
-}
-
-impl ops::Neg for &Value {
-    type Output = Value;
-
-    fn neg(self) -> Value {
-        let neg = value!(-1.0);
-        self * &neg
     }
 }
 
