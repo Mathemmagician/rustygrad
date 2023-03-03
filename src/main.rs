@@ -137,11 +137,10 @@ impl Value {
     fn backward(&self) {
         let mut topo: Vec<Value> = vec![];
         let mut visited: HashSet<Value> = HashSet::new();
-
         self._build_topo(&mut topo, &mut visited);
         topo.reverse();
-        self.borrow_mut().grad = 1.0;
 
+        self.borrow_mut().grad = 1.0;
         for v in topo {
             if let Some(backprop) = v.borrow()._backward {
                 backprop(&v.borrow());
