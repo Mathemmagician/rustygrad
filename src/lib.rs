@@ -109,9 +109,7 @@ impl Value {
         let out = Value::from(self.borrow().data.max(0.0));
         out.borrow_mut()._prev = vec![Value(Rc::clone(self))];
         out.borrow_mut()._backward = Some(|value: &ValueData| {
-            if value.data > 0.0 {
-                value._prev[0].borrow_mut().grad += value.grad;
-            }
+            value._prev[0].borrow_mut().grad += if value.data > 0.0 {value.grad} else {0.0}; 
         });
         out
     }
