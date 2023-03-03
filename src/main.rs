@@ -10,13 +10,6 @@ use std::{
 };
 use uuid::Uuid;
 
-#[macro_export]
-macro_rules! value {
-    ( $x:expr ) => {{
-        Value::from($x)
-    }};
-}
-
 struct ValueData {
     uuid: Uuid,
     data: f64,
@@ -51,7 +44,7 @@ impl PartialEq for Value {
 impl Eq for Value {}
 
 impl_op_ex!(+ |a: &Value, b: &Value| -> Value {
-    let out = value!(a.borrow().data + b.borrow().data);
+    let out = Value::from(a.borrow().data + b.borrow().data);
     out.borrow_mut()._prev = vec![Value(Rc::clone(a)), Value(Rc::clone(b))];
     out.borrow_mut()._backward = Some(|value: &ValueData| {
         value._prev[0].borrow_mut().grad += value.grad;
@@ -61,7 +54,7 @@ impl_op_ex!(+ |a: &Value, b: &Value| -> Value {
 });
 
 impl_op_ex!(*|a: &Value, b: &Value| -> Value {
-    let out = value!(a.borrow().data * b.borrow().data);
+    let out = Value::from(a.borrow().data * b.borrow().data);
     out.borrow_mut()._prev = vec![Value(Rc::clone(a)), Value(Rc::clone(b))];
     out.borrow_mut()._backward = Some(|value: &ValueData| {
         value._prev[0].borrow_mut().grad += value._prev[1].borrow_mut().data * value.grad;
@@ -71,14 +64,14 @@ impl_op_ex!(*|a: &Value, b: &Value| -> Value {
 });
 
 impl_op_ex!(+= |a: &mut Value, b: &Value| { *a = &*a + b });
-impl_op!(-|a: &Value| -> Value { a * value!(-1.0) });
+impl_op!(-|a: &Value| -> Value { a * Value::from(-1.0) });
 impl_op_ex!(-|a: &Value, b: &Value| -> Value { a + (-b) });
 impl_op_ex!(/ |a: &Value, b: &Value| -> Value { a * b.pow(-1.0) });
 
-impl_op_ex_commutative!(+|a: &Value, b: f64| -> Value { a + value!(b) });
-impl_op_ex_commutative!(*|a: &Value, b: f64| -> Value { a * value!(b) });
-impl_op_ex!(/ |a: &Value, b: f64| -> Value { a / value!(b) });
-impl_op_ex!(/ |a: f64, b: &Value| -> Value { value!(a) / b });
+impl_op_ex_commutative!(+|a: &Value, b: f64| -> Value { a + Value::from(b) });
+impl_op_ex_commutative!(*|a: &Value, b: f64| -> Value { a * Value::from(b) });
+impl_op_ex!(/ |a: &Value, b: f64| -> Value { a / Value::from(b) });
+impl_op_ex!(/ |a: f64, b: &Value| -> Value { Value::from(a) / b });
 
 impl ValueData {
     fn new(data: f64) -> ValueData {
@@ -113,7 +106,7 @@ impl Value {
     }
 
     fn relu(&self) -> Value {
-        let out = value!(self.borrow().data.max(0.0));
+        let out = Value::from(self.borrow().data.max(0.0));
         out.borrow_mut()._prev = vec![Value(Rc::clone(self))];
         out.borrow_mut()._backward = Some(|value: &ValueData| {
             if value.data > 0.0 {
@@ -124,8 +117,8 @@ impl Value {
     }
 
     fn pow(&self, power: f64) -> Value {
-        let out = value!(self.borrow().data.powf(power));
-        out.borrow_mut()._prev = vec![Value(Rc::clone(self)), value!(power)];
+        let out = Value::from(self.borrow().data.powf(power));
+        out.borrow_mut()._prev = vec![Value(Rc::clone(self)), Value::from(power)];
         out.borrow_mut()._backward = Some(|value: &ValueData| {
             let base = value._prev[0].borrow().data;
             let p = value._prev[1].borrow().data;
@@ -164,8 +157,8 @@ fn main() {
     
     // a = Value(-4.0)
     // b = Value(2.0)
-    let a = value!(-4.0);
-    let b = value!(2.0);
+    let a = Value::from(-4.0);
+    let b = Value::from(2.0);
     
     // c = a + b
     // d = a * b + b**3
