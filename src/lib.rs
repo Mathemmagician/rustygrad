@@ -23,7 +23,6 @@ pub struct Value(Rc<RefCell<ValueData>>);
 
 impl ops::Deref for Value {
     type Target = Rc<RefCell<ValueData>>;
-
     fn deref(&self) -> &Self::Target {
         &self.0
     }
@@ -63,10 +62,10 @@ impl_op_ex!(*|a: &Value, b: &Value| -> Value {
     out
 });
 
-impl_op_ex!(+= |a: &mut Value, b: &Value| { *a = &*a + b });
-impl_op!(-|a: &Value| -> Value { a * Value::from(-1.0) });
 impl_op_ex!(-|a: &Value, b: &Value| -> Value { a + (-b) });
 impl_op_ex!(/ |a: &Value, b: &Value| -> Value { a * b.pow(-1.0) });
+impl_op_ex!(+= |a: &mut Value, b: &Value| { *a = &*a + b });
+impl_op!(-|a: &Value| -> Value { a * Value::from(-1.0) });
 
 impl_op_ex_commutative!(+|a: &Value, b: f64| -> Value { a + Value::from(b) });
 impl_op_ex_commutative!(*|a: &Value, b: f64| -> Value { a * Value::from(b) });
@@ -76,12 +75,18 @@ impl_op_ex!(/ |a: f64, b: &Value| -> Value { Value::from(a) / b });
 impl ValueData {
     fn new(data: f64) -> ValueData {
         ValueData {
-            uuid: Uuid::new_v4(),
             data,
             grad: 0.0,
+            uuid: Uuid::new_v4(),
             _backward: None,
             _prev: Vec::new(),
         }
+    }
+}
+
+impl<T: Into<f64>> From<T> for Value {
+    fn from(t: T) -> Value {
+        Value::new(ValueData::new(t.into()))
     }
 }
 
@@ -91,12 +96,6 @@ impl Debug for ValueData {
             .field("data", &self.data)
             .field("grad", &self.grad)
             .finish()
-    }
-}
-
-impl<T: Into<f64>> From<T> for Value {
-    fn from(t: T) -> Value {
-        Value::new(ValueData::new(t.into()))
     }
 }
 
