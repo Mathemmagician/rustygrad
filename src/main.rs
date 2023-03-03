@@ -197,7 +197,6 @@ fn main() {
     // g.backward()
     // print(f'{a.grad:.4f}') # prints 138.8338, i.e. the numerical value of dg/da
     // print(f'{b.grad:.4f}') # prints 645.5773, i.e. the numerical value of dg/db
-
     g.backward();
     println!("{:.4}", a.borrow().grad); // 138.8338
     println!("{:.4}", b.borrow().grad); // 645.5773
