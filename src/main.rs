@@ -1,18 +1,16 @@
 use micrograd::Value;
 
-
 fn main() {
-    
     // a = Value(-4.0)
     // b = Value(2.0)
     let a = Value::from(-4.0);
     let b = Value::from(2.0);
-    
+
     // c = a + b
     // d = a * b + b**3
     let mut c = &a + &b;
     let mut d = &a * &b + &b.pow(3.0);
-    
+
     // c += c + 1
     // c += 1 + c + (-a)
     // d += d * 2 + (b + a).relu()
