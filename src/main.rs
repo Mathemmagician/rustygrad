@@ -75,6 +75,11 @@ impl_op!(-|a: &Value| -> Value { a * value!(-1.0) });
 impl_op_ex!(-|a: &Value, b: &Value| -> Value { a + (-b) });
 impl_op_ex!(/ |a: &Value, b: &Value| -> Value { a * b.pow(-1.0) });
 
+impl_op_ex_commutative!(+|a: &Value, b: f64| -> Value { a + value!(b) });
+impl_op_ex_commutative!(*|a: &Value, b: f64| -> Value { a * value!(b) });
+impl_op_ex!(/ |a: &Value, b: f64| -> Value { a / value!(b) });
+impl_op_ex!(/ |a: f64, b: &Value| -> Value { value!(a) / b });
+
 impl ValueData {
     fn new(data: f64) -> ValueData {
         ValueData {
@@ -120,12 +125,11 @@ impl Value {
 
     fn pow(&self, power: f64) -> Value {
         let out = value!(self.borrow().data.powf(power));
-        out.borrow_mut()._prev = vec![Value(Rc::clone(self)), Value::from(power)];
+        out.borrow_mut()._prev = vec![Value(Rc::clone(self)), value!(power)];
         out.borrow_mut()._backward = Some(|value: &ValueData| {
             let base = value._prev[0].borrow().data;
             let p = value._prev[1].borrow().data;
             value._prev[0].borrow_mut().grad += p * base.powf(p - 1.0) * value.grad;
-            // not changing prev[1] gradient, as we are treating power as a constant
         });
         out
     }
@@ -158,42 +162,44 @@ impl Value {
 }
 
 fn main() {
-    // Micrograd:
+    
     // a = Value(-4.0)
-    let a = value!(-4.0);
     // b = Value(2.0)
+    let a = value!(-4.0);
     let b = value!(2.0);
+    
     // c = a + b
-    let mut c = &a + &b;
     // d = a * b + b**3
+    let mut c = &a + &b;
     let mut d = &a * &b + &b.pow(3.0);
+    
     // c += c + 1
-    c += &c + value!(1.0);
     // c += 1 + c + (-a)
-    c += value!(1.0) + &c + (-&a);
     // d += d * 2 + (b + a).relu()
-    d += &d * value!(2.0) + (&b + &a).relu();
     // d += 3 * d + (b - a).relu()
-    d += value!(3.0) * &d + (&b - &a).relu();
+    c += &c + 1.0;
+    c += 1.0 + &c + (-&a);
+    d += &d * 2.0 + (&b + &a).relu();
+    d += 3.0 * &d + (&b - &a).relu();
+
     // e = c - d
-    let e = &c - &d;
     // f = e**2
-    let f = e.pow(2.0);
     // g = f / 2.0
-    let mut g = &f / value!(2.0);
     // g += 10.0 / f
-    g += value!(10.0) / &f;
+    let e = &c - &d;
+    let f = e.pow(2.0);
+    let mut g = &f / 2.0;
+    g += 10.0 / &f;
 
     // print(f'{g.data:.4f}') # prints 24.7041, the outcome of this forward pass
     println!("{:.4}", g.borrow().data); // 24.7041
 
     // g.backward()
-    g.backward();
-
     // print(f'{a.grad:.4f}') # prints 138.8338, i.e. the numerical value of dg/da
-    println!("{:.4}", a.borrow().grad); // 138.8338
-
     // print(f'{b.grad:.4f}') # prints 645.5773, i.e. the numerical value of dg/db
+
+    g.backward();
+    println!("{:.4}", a.borrow().grad); // 138.8338
     println!("{:.4}", b.borrow().grad); // 645.5773
 
     println!("a is {:?}", a);
