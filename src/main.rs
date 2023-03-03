@@ -70,9 +70,10 @@ impl_op_ex!(*|a: &Value, b: &Value| -> Value {
     out
 });
 
+impl_op_ex!(+= |a: &mut Value, b: &Value| { *a = &*a + b });
 impl_op!(-|a: &Value| -> Value { a * value!(-1.0) });
 impl_op_ex!(-|a: &Value, b: &Value| -> Value { a + (-b) });
-impl_op_ex!(/ |a: &Value, b: &Value| -> Value { a * b.pow(&value!(-1.0)) });
+impl_op_ex!(/ |a: &Value, b: &Value| -> Value { a * b.pow(-1.0) });
 
 impl ValueData {
     fn new(data: f64) -> ValueData {
@@ -117,9 +118,9 @@ impl Value {
         out
     }
 
-    fn pow(&self, other: &Value) -> Value {
-        let out = value!(self.borrow().data.powf(other.borrow().data));
-        out.borrow_mut()._prev = vec![Value(Rc::clone(self)), Value(Rc::clone(other))];
+    fn pow(&self, power: f64) -> Value {
+        let out = value!(self.borrow().data.powf(power));
+        out.borrow_mut()._prev = vec![Value(Rc::clone(self)), Value::from(power)];
         out.borrow_mut()._backward = Some(|value: &ValueData| {
             let base = value._prev[0].borrow().data;
             let p = value._prev[1].borrow().data;
@@ -147,7 +148,7 @@ impl Value {
     fn _build_topo(&self, topo: &mut Vec<Value>, visited: &mut HashSet<Value>) {
         if !visited.contains(self) {
             visited.insert(Value(Rc::clone(self)));
-            
+
             for child in &self.borrow()._prev {
                 child._build_topo(topo, visited);
             }
@@ -165,23 +166,23 @@ fn main() {
     // c = a + b
     let mut c = &a + &b;
     // d = a * b + b**3
-    let mut d = &a * &b + &b.pow(&value!(3.0));
+    let mut d = &a * &b + &b.pow(3.0);
     // c += c + 1
-    c = &c + &c + value!(1.0);
+    c += &c + value!(1.0);
     // c += 1 + c + (-a)
-    c = &c + value!(1.0) + &c + (-&a);
+    c += value!(1.0) + &c + (-&a);
     // d += d * 2 + (b + a).relu()
-    d = &d + &d * value!(2.0) + (&b + &a).relu();
+    d += &d * value!(2.0) + (&b + &a).relu();
     // d += 3 * d + (b - a).relu()
-    d = &d + value!(3.0) * &d + (&b - &a).relu();
+    d += value!(3.0) * &d + (&b - &a).relu();
     // e = c - d
     let e = &c - &d;
     // f = e**2
-    let f = e.pow(&value!(2.0));
+    let f = e.pow(2.0);
     // g = f / 2.0
     let mut g = &f / value!(2.0);
     // g += 10.0 / f
-    g = &g + value!(10.0) / &f;
+    g += value!(10.0) / &f;
 
     // print(f'{g.data:.4f}') # prints 24.7041, the outcome of this forward pass
     println!("{:.4}", g.borrow().data); // 24.7041
