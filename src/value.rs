@@ -16,7 +16,7 @@ pub struct ValueData {
     _prev: Vec<Value>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Value(Rc<RefCell<ValueData>>);
 
 impl ops::Deref for Value {
@@ -88,12 +88,14 @@ impl<T: Into<f64>> From<T> for Value {
     }
 }
 
-impl Debug for ValueData {
+impl Debug for Value {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Value")
-            .field("data", &self.data)
-            .field("grad", &self.grad)
-            .finish()
+        write!(
+            f,
+            "Value(data={:.2}, grad={:.2})",
+            &self.borrow().data,
+            &self.borrow().grad
+        )
     }
 }
 
