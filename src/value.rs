@@ -90,12 +90,8 @@ impl<T: Into<f64>> From<T> for Value {
 
 impl Debug for Value {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "Value(data={:.2}, grad={:.2})",
-            &self.borrow().data,
-            &self.borrow().grad
-        )
+        let value = &self.borrow();
+        write!(f, "Value( data={:.2}, grad={:.2} )", value.data, value.grad)
     }
 }
 
