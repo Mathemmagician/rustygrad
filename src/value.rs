@@ -16,7 +16,7 @@ pub struct ValueData {
     _prev: Vec<Value>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Value(Rc<RefCell<ValueData>>);
 
 impl ops::Deref for Value {
@@ -42,7 +42,7 @@ impl Eq for Value {}
 
 impl_op_ex!(+ |a: &Value, b: &Value| -> Value {
     let out = Value::from(a.borrow().data + b.borrow().data);
-    out.borrow_mut()._prev = vec![Value(Rc::clone(a)), Value(Rc::clone(b))];
+    out.borrow_mut()._prev = vec![a.clone(), b.clone()];
     out.borrow_mut()._backward = Some(|value: &ValueData| {
         value._prev[0].borrow_mut().grad += value.grad;
         value._prev[1].borrow_mut().grad += value.grad;
@@ -52,7 +52,7 @@ impl_op_ex!(+ |a: &Value, b: &Value| -> Value {
 
 impl_op_ex!(*|a: &Value, b: &Value| -> Value {
     let out = Value::from(a.borrow().data * b.borrow().data);
-    out.borrow_mut()._prev = vec![Value(Rc::clone(a)), Value(Rc::clone(b))];
+    out.borrow_mut()._prev = vec![a.clone(), b.clone()];
     out.borrow_mut()._backward = Some(|value: &ValueData| {
         value._prev[0].borrow_mut().grad += value._prev[1].borrow_mut().data * value.grad;
         value._prev[1].borrow_mut().grad += value._prev[0].borrow_mut().data * value.grad;
@@ -104,7 +104,7 @@ impl Value {
 
     pub fn relu(&self) -> Value {
         let out = Value::from(self.borrow().data.max(0.0));
-        out.borrow_mut()._prev = vec![Value(Rc::clone(self))];
+        out.borrow_mut()._prev = vec![self.clone()];
         out.borrow_mut()._backward = Some(|value: &ValueData| {
             value._prev[0].borrow_mut().grad += if value.data > 0.0 { value.grad } else { 0.0 };
         });
@@ -113,7 +113,7 @@ impl Value {
 
     pub fn pow(&self, power: f64) -> Value {
         let out = Value::from(self.borrow().data.powf(power));
-        out.borrow_mut()._prev = vec![Value(Rc::clone(self)), Value::from(power)];
+        out.borrow_mut()._prev = vec![self.clone(), Value::from(power)];
         out.borrow_mut()._backward = Some(|value: &ValueData| {
             let base = value._prev[0].borrow().data;
             let p = value._prev[1].borrow().data;
@@ -138,12 +138,12 @@ impl Value {
 
     fn _build_topo(&self, topo: &mut Vec<Value>, visited: &mut HashSet<Value>) {
         if !visited.contains(self) {
-            visited.insert(Value(Rc::clone(self)));
+            visited.insert(self.clone());
 
             for child in &self.borrow()._prev {
                 child._build_topo(topo, visited);
             }
-            topo.push(Value(Rc::clone(self)));
+            topo.push(self.clone());
         }
     }
 }
