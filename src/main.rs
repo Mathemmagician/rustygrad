@@ -1,6 +1,22 @@
+use micrograd::Layer;
+use micrograd::Neuron;
 use micrograd::Value;
 
 fn main() {
+    // value();
+    nn();
+}
+
+fn nn() {
+    let n = Neuron::from(2);
+    let x = vec![Value::from(1.0), Value::from(-2.0)];
+
+    println!("{:?}", n);
+    let y = n.forward(&x);
+    println!("{:?}", y)
+}
+
+fn value() {
     // a = Value(-4.0)
     // b = Value(2.0)
     let a = Value::from(-4.0);

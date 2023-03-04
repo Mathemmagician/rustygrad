@@ -4,7 +4,6 @@ const EPS: f64 = 0.0001;
 
 #[test]
 fn value_example() {
-
     // a = Value(-4.0)
     // b = Value(2.0)
     let a = Value::from(-4.0);
