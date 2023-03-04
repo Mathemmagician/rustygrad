@@ -23,4 +23,12 @@ impl MLP {
         }
         x
     }
+
+    pub fn parameters(&self) -> Vec<Value> {
+        let mut params: Vec<Value> = vec![];
+        for layer in &self.layers {
+            params.extend(layer.parameters());
+        }
+        params
+    }
 }

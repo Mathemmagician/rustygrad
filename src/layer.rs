@@ -19,4 +19,12 @@ impl Layer {
     pub fn forward(&self, x: &Vec<Value>) -> Vec<Value> {
         self.neurons.iter().map(|n| n.forward(x)).collect()
     }
+
+    pub fn parameters(&self) -> Vec<Value> {
+        let mut params: Vec<Value> = vec![];
+        for n in &self.neurons {
+            params.extend(n.parameters());
+        }
+        params
+    }
 }

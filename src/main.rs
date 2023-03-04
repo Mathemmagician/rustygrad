@@ -1,7 +1,6 @@
-use micrograd::Layer;
-use micrograd::MLP;
 use micrograd::Neuron;
 use micrograd::Value;
+use micrograd::MLP;
 
 fn main() {
     value();

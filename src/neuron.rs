@@ -45,4 +45,10 @@ impl Neuron {
         }
         out
     }
+
+    pub fn parameters(&self) -> Vec<Value> {
+        let mut out = self.w.clone();
+        out.insert(0, self.b.clone());
+        out
+    }
 }
