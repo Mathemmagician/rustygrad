@@ -10,10 +10,8 @@ pub struct Neuron {
 
 impl Debug for Neuron {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct(if self.nonlin { "ReLU" } else { "Linear" })
-            .field("weights", &self.w)
-            .field("bias", &self.b)
-            .finish()
+        let name = if self.nonlin { "ReLU" } else { "Linear" };
+        write!(f, "{}({})", name, self.w.len())
     }
 }
 

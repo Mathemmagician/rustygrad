@@ -1,9 +1,11 @@
 use micrograd::Layer;
+use micrograd::MLP;
 use micrograd::Neuron;
 use micrograd::Value;
 
 fn main() {
-    // value();
+    value();
+    println!("\n===============\n");
     nn();
 }
 
@@ -11,9 +13,14 @@ fn nn() {
     let n = Neuron::from(2);
     let x = vec![Value::from(1.0), Value::from(-2.0)];
 
-    println!("{:?}", n);
+    println!("n = {:?}", n);
     let y = n.forward(&x);
-    println!("{:?}", y)
+    println!("{:?}", y);
+
+    let model = MLP::new(2, vec![16, 16, 1]);
+    println!("model = {:?}", model);
+    let res = model.forward(vec![Value::from(1.0), Value::from(2.0)]);
+    println!("\nres {:?}", res);
 }
 
 fn value() {
