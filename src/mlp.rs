@@ -22,11 +22,7 @@ impl MLP {
     }
 
     pub fn parameters(&self) -> Vec<Value> {
-        let mut params: Vec<Value> = vec![];
-        for layer in &self.layers {
-            params.extend(layer.parameters());
-        }
-        params
+        self.layers.iter().flat_map(|l| l.parameters()).collect()
     }
 
     pub fn zero_grad(&self) {
