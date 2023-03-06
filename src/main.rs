@@ -1,4 +1,4 @@
-use micrograd::read_csv_file;
+use micrograd::load_moons_data;
 use micrograd::Neuron;
 use micrograd::Value;
 use micrograd::MLP;
@@ -57,26 +57,7 @@ fn loss(model: &MLP, xs: &[Vec<f64>], ys: &[f64]) -> (Value, f64) {
 fn mlp() {
     let model = MLP::new(2, vec![16, 16, 1]);
 
-    let data_points = read_csv_file("make_moons.csv").unwrap();
-    let mut xs: Vec<Vec<f64>> = vec![];
-    let mut ys: Vec<f64> = vec![];
-
-    for data_point in data_points {
-        let x_vec = vec![data_point.x, data_point.y];
-        xs.push(x_vec);
-        ys.push(data_point.label);
-    }
-
-    // let xs = vec![
-    //     vec![1.122, 0.081],
-    //     vec![-0.819, 0.059],
-    //     vec![1.614, -0.125],
-    //     vec![-0.923, 0.365],
-    //     vec![0.144, 0.044],
-    //     vec![0.164, 0.117],
-    // ];
-    // let ys = vec![-1.0, -1.0, 1.0, -1.0, 1.0, 1.0];
-    // let (total_loss, acc) = loss(&model, &xs, &ys);
+    let (xs, ys) = load_moons_data();
 
     // optimization
     for k in 0..100 {

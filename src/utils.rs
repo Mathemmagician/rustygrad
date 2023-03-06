@@ -34,3 +34,17 @@ pub fn read_csv_file(filename: &str) -> Result<Vec<DataPoint>, Box<dyn Error>> {
 
     Ok(data_points)
 }
+
+pub fn load_moons_data() -> (Vec<Vec<f64>>, Vec<f64>) {
+    let data_points = read_csv_file("make_moons.csv").unwrap();
+    let mut xs: Vec<Vec<f64>> = vec![];
+    let mut ys: Vec<f64> = vec![];
+
+    for data_point in data_points {
+        let x_vec = vec![data_point.x, data_point.y];
+        xs.push(x_vec);
+        ys.push(data_point.label);
+    }
+
+    (xs, ys)
+}
