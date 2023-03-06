@@ -21,10 +21,6 @@ impl Layer {
     }
 
     pub fn parameters(&self) -> Vec<Value> {
-        let mut params: Vec<Value> = vec![];
-        for n in &self.neurons {
-            params.extend(n.parameters());
-        }
-        params
+        self.neurons.iter().flat_map(|n| n.parameters()).collect()
     }
 }
