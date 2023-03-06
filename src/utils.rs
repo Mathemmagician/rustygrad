@@ -3,9 +3,9 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 
 pub struct DataPoint {
-    x: f64,
-    y: f64,
-    label: f64,
+    pub x: f64,
+    pub y: f64,
+    pub label: f64,
 }
 
 pub fn read_csv_file(filename: &str) -> Result<Vec<DataPoint>, Box<dyn Error>> {
