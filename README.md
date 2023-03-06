@@ -2,7 +2,7 @@
 # micrograd
 ![Thanks, Dalle](crab.png)
 
-Inspired by Andrej Karpathy's [micrograd](https://github.com/karpathy/micrograd). This repo tries to create a tiny Autograd engine in Rust:
+Inspired by Andrej Karpathy's [micrograd](https://github.com/karpathy/micrograd). This repo implements a tiny Autograd engine in Rust:
 
 1. with a friendly api
 2. an easy to understand implementation
