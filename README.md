@@ -4,11 +4,11 @@
 
 Inspired by Andrej Karpathy's [micrograd](https://github.com/karpathy/micrograd). This repo implements a tiny Autograd engine in Rust:
 
-1. with a friendly api
-2. an easy to understand implementation
-3. in minimal amount of code
+1. with a friendly API
+2. an easy-to-understand implementation
+3. in a minimal amount of code
 
-The engine and the neural net are implemented in about 150 and 100 lines of code respectivelly (vs Andrej's 100 and 50)! About twice as long, but twice as fast!
+The engine and the neural net are implemented in about 150 and 100 lines of code respectively (vs Andrej's 100 and 50)! About twice as long, but twice as fast!
 
 #### Example usage
 Below is an example showing supported operations `// and their Python version`
