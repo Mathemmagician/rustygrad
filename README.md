@@ -57,9 +57,14 @@ fn main() {
 }
 ```
 
+You can run the above example with 
+```
+cargo run --example engine
+```
+
 #### Training a neural net
 
-The file `demo.rs` trains a MLP binary classifier (with 2 16-node hidden layers) on a toy `make_moons.csv` dataset. Since plots in rust are hard, for now, here is an ascii representation of the learned solution space:
+The file `mlp.rs` trains a MLP binary classifier (with 2 16-node hidden layers) on a toy `make_moons.csv` dataset. Since plots in rust are hard, for now, here is an ascii representation of the learned solution space:
 
 
 ```
@@ -103,7 +108,11 @@ The file `demo.rs` trains a MLP binary classifier (with 2 16-node hidden layers)
 . . . . . . . . . * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
 . . . . . . . . * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
 . . . . . . . . * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
+```
 
+You can run the above example with 
+```
+cargo run --example mlp
 ```
 
 #### Running tests
