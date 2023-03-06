@@ -95,6 +95,26 @@ fn mlp() {
             acc * 100.0
         );
     }
+
+    // ASCII contour plot
+    let mut grid: Vec<Vec<String>> = Vec::new();
+    let bound = 20;
+    for y in -bound..bound {
+        let mut row: Vec<String> = Vec::new();
+        for x in -bound..bound {
+            let k = &model.forward(vec![Value::from(x as f64 / bound as f64 * 2.0), Value::from(-y as f64 / bound as f64 * 2.0)])[0];
+            row.push(if k.borrow().data > 0.0 {String::from("*")} else {String::from(".")});
+        }
+        grid.push(row);
+    }
+
+    for row in grid {
+        for val in row {
+            print!("{} ", val);
+        }
+        println!();
+    }
+
 }
 
 fn loss(model: &MLP, xs: &[Vec<f64>], ys: &[f64]) -> (Value, f64) {
