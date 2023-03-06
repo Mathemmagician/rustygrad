@@ -32,13 +32,8 @@ impl Neuron {
     }
 
     pub fn forward(&self, x: &Vec<Value>) -> Value {
-        let wixi_sum: f64 = self
-            .w
-            .iter()
-            .zip(x)
-            .map(|(wi, xi)| wi.borrow().data * xi.borrow().data)
-            .sum();
-        let out = Value::from(wixi_sum + self.b.borrow().data);
+        let wixi_sum: Value = self.w.iter().zip(x).map(|(wi, xi)| wi * xi).sum();
+        let out = wixi_sum + &self.b;
 
         if self.nonlin {
             return out.relu();
