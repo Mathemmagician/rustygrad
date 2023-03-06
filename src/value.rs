@@ -3,6 +3,7 @@ use std::{
     collections::HashSet,
     fmt::{self, Debug},
     hash::{Hash, Hasher},
+    iter::Sum,
     ops,
     rc::Rc,
 };
@@ -54,8 +55,10 @@ impl_op_ex!(*|a: &Value, b: &Value| -> Value {
     let out = Value::from(a.borrow().data * b.borrow().data);
     out.borrow_mut()._prev = vec![a.clone(), b.clone()];
     out.borrow_mut()._backward = Some(|value: &ValueData| {
-        value._prev[0].borrow_mut().grad += value._prev[1].borrow_mut().data * value.grad;
-        value._prev[1].borrow_mut().grad += value._prev[0].borrow_mut().data * value.grad;
+        let a_data = value._prev[0].borrow().data;
+        let b_data = value._prev[1].borrow().data;
+        value._prev[0].borrow_mut().grad += b_data * value.grad;
+        value._prev[1].borrow_mut().grad += a_data * value.grad;
     });
     out
 });
@@ -63,6 +66,7 @@ impl_op_ex!(*|a: &Value, b: &Value| -> Value {
 impl_op_ex!(-|a: &Value, b: &Value| -> Value { a + (-b) });
 impl_op_ex!(/ |a: &Value, b: &Value| -> Value { a * b.pow(-1.0) });
 impl_op_ex!(+= |a: &mut Value, b: &Value| { *a = &*a + b });
+impl_op_ex!(*= |a: &mut Value, b: &Value| { *a = &*a * b });
 impl_op!(-|a: &Value| -> Value { a * Value::from(-1.0) });
 
 impl_op_ex_commutative!(+|a: &Value, b: f64| -> Value { a + Value::from(b) });
@@ -90,8 +94,8 @@ impl<T: Into<f64>> From<T> for Value {
 
 impl Debug for Value {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let value = &self.borrow();
-        write!(f, "Value( data={:.2}, grad={:.2} )", value.data, value.grad)
+        let v = &self.borrow();
+        write!(f, "Value({}, data={}, grad={})", v.uuid, v.data, v.grad)
     }
 }
 
@@ -135,13 +139,17 @@ impl Value {
     }
 
     fn _build_topo(&self, topo: &mut Vec<Value>, visited: &mut HashSet<Value>) {
-        if !visited.contains(self) {
-            visited.insert(self.clone());
-
-            for child in &self.borrow()._prev {
+        if visited.insert(self.clone()) {
+            self.borrow()._prev.iter().for_each(|child| {
                 child._build_topo(topo, visited);
-            }
+            });
             topo.push(self.clone());
         }
+    }
+}
+
+impl Sum for Value {
+    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
+        iter.fold(Value::from(0.0), |acc, val| acc + val)
     }
 }
