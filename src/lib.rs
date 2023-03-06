@@ -12,3 +12,6 @@ pub use crate::layer::Layer;
 
 mod mlp;
 pub use crate::mlp::MLP;
+
+mod utils;
+pub use crate::utils::{read_csv_file, DataPoint};
