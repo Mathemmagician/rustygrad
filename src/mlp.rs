@@ -17,11 +17,8 @@ impl MLP {
         MLP { layers }
     }
 
-    pub fn forward(&self, mut x: Vec<Value>) -> Vec<Value> {
-        for layer in &self.layers {
-            x = layer.forward(&x);
-        }
-        x
+    pub fn forward(&self, x: Vec<Value>) -> Vec<Value> {
+        self.layers.iter().fold(x, |x, layer| layer.forward(&x))
     }
 
     pub fn parameters(&self) -> Vec<Value> {
