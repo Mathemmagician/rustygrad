@@ -1,8 +1,8 @@
 #[macro_use]
 extern crate impl_ops;
 
-mod value;
-pub use crate::value::Value;
+mod engine;
+pub use crate::engine::Value;
 
 mod neuron;
 pub use crate::neuron::Neuron;
