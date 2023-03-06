@@ -1,3 +1,4 @@
+use micrograd::read_csv_file;
 use micrograd::Neuron;
 use micrograd::Value;
 use micrograd::MLP;
@@ -6,6 +7,99 @@ fn main() {
     value();
     println!("\n===============\n");
     nn();
+    println!("\n===============\n");
+    mlp();
+}
+
+fn loss(model: &MLP, xs: &[Vec<f64>], ys: &[f64]) -> (Value, f64) {
+    let inputs: Vec<Vec<Value>> = xs
+        .iter()
+        .map(|xrow| vec![Value::from(xrow[0]), Value::from(xrow[1])])
+        .collect();
+
+    // forward the model to get scores
+    let scores: Vec<Value> = inputs
+        .iter()
+        .map(|xrow| model.forward(xrow.clone())[0].clone())
+        .collect();
+
+    // svm "max-margin" loss
+    let losses: Vec<Value> = ys
+        .iter()
+        .zip(&scores)
+        .map(|(yi, scorei)| (1.0 + -yi * scorei).relu())
+        .collect();
+    let n: f64 = (&losses).len() as f64;
+    let data_loss: Value = losses.into_iter().sum::<Value>() / n;
+
+    // L2 regularization
+    let alpha: f64 = 0.0001;
+    let reg_loss: Value = alpha
+        * model
+            .parameters()
+            .iter()
+            .map(|p| p * p)
+            .into_iter()
+            .sum::<Value>();
+    let total_loss = data_loss + reg_loss;
+
+    // also get accuracy
+    let accuracies: Vec<bool> = ys
+        .iter()
+        .zip(scores.iter())
+        .map(|(yi, scorei)| (*yi > 0.0) == (scorei.borrow().data > 0.0))
+        .collect();
+    let accuracy = accuracies.iter().filter(|&a| *a).count() as f64 / n;
+
+    (total_loss, accuracy)
+}
+
+fn mlp() {
+    let model = MLP::new(2, vec![16, 16, 1]);
+
+    let data_points = read_csv_file("make_moons.csv").unwrap();
+    let mut xs: Vec<Vec<f64>> = vec![];
+    let mut ys: Vec<f64> = vec![];
+
+    for data_point in data_points {
+        let x_vec = vec![data_point.x, data_point.y];
+        xs.push(x_vec);
+        ys.push(data_point.label);
+    }
+
+    // let xs = vec![
+    //     vec![1.122, 0.081],
+    //     vec![-0.819, 0.059],
+    //     vec![1.614, -0.125],
+    //     vec![-0.923, 0.365],
+    //     vec![0.144, 0.044],
+    //     vec![0.164, 0.117],
+    // ];
+    // let ys = vec![-1.0, -1.0, 1.0, -1.0, 1.0, 1.0];
+    // let (total_loss, acc) = loss(&model, &xs, &ys);
+
+    // optimization
+    for k in 0..100 {
+        // forward
+        let (total_loss, acc) = loss(&model, &xs, &ys);
+
+        // backward
+        model.zero_grad();
+        total_loss.backward();
+
+        // update (sgd)
+        let learning_rate = 1.0 - 0.9 * (k as f64) / 100.0;
+        for p in &model.parameters() {
+            let delta = learning_rate * p.borrow().grad;
+            p.borrow_mut().data -= delta;
+        }
+
+        println!(
+            "step {k} loss {:.3}, accuracy {:.2}%",
+            total_loss.borrow().data,
+            acc * 100.0
+        );
+    }
 }
 
 fn nn() {
@@ -15,11 +109,6 @@ fn nn() {
     println!("n = {:?}", n);
     let y = n.forward(&x);
     println!("{:?}", y);
-
-    let model = MLP::new(2, vec![16, 16, 1]);
-    println!("model = {:?}", model);
-    let res = model.forward(vec![Value::from(1.0), Value::from(2.0)]);
-    println!("\nres {:?}", res);
 }
 
 fn value() {
