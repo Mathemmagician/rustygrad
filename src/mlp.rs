@@ -31,4 +31,10 @@ impl MLP {
         }
         params
     }
+
+    pub fn zero_grad(&self) {
+        for p in self.parameters() {
+            p.borrow_mut().grad = 0.0;
+        }
+    }
 }
