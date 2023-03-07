@@ -1,5 +1,5 @@
-use micrograd::Neuron;
-use micrograd::Value;
+use rustygrad::Neuron;
+use rustygrad::Value;
 
 fn main() {
     let n = Neuron::from(2);

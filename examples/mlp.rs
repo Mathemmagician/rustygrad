@@ -1,6 +1,6 @@
-use micrograd::load_moons_data;
-use micrograd::Value;
-use micrograd::MLP;
+use rustygrad::load_moons_data;
+use rustygrad::Value;
+use rustygrad::MLP;
 
 fn main() {
     let model = MLP::new(2, vec![16, 16, 1]);

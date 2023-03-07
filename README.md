@@ -14,7 +14,7 @@ The engine and the neural net are implemented in about 150 and 100 lines of code
 Below is an example showing supported operations `// and their Python version`
 
 ```Rust
-use micrograd::Value;
+use rustygrad::Value;
 
 fn main() {
     // a = Value(-4.0)

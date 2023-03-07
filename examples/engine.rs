@@ -1,4 +1,4 @@
-use micrograd::Value;
+use rustygrad::Value;
 
 fn main() {
     // a = Value(-4.0)

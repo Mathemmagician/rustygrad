@@ -1,4 +1,4 @@
-use micrograd::Value;
+use rustygrad::Value;
 
 const EPS: f64 = 0.0001;
 

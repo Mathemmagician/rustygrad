@@ -1,5 +1,5 @@
-use micrograd::Neuron;
-use micrograd::Value;
+use rustygrad::Neuron;
+use rustygrad::Value;
 
 #[test]
 fn neuron_example() {
