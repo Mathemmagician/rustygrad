@@ -1,5 +1,5 @@
 
-# micrograd
+# rustygrad
 ![Thanks, Dalle](crab.png)
 
 Inspired by Andrej Karpathy's [micrograd](https://github.com/karpathy/micrograd). This repo implements a tiny Autograd engine in Rust:
