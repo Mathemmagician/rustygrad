@@ -11,7 +11,7 @@ Inspired by Andrej Karpathy's [micrograd](https://github.com/karpathy/micrograd)
 The engine and the neural net are implemented in about 150 and 100 lines of code respectively (vs Andrej's 100 and 50)! About twice as long, but twice as fast!
 
 #### Example usage
-Below is an example a dynamically built DAG Neural Net (directed acyclic graph) showing numerous supported operations `// and their Python micrograd version`
+Below is an example of a dynamically built DAG Neural Net (directed acyclic graph) showing numerous supported operations `// and their Python micrograd version`
 
 ```Rust
 use rustygrad::Value;
