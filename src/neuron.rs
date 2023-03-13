@@ -21,7 +21,7 @@ impl Neuron {
         let range = Uniform::<f64>::new(-1.0, 1.0);
 
         Neuron {
-            w: (0..nin).map(|_| Value::from(rng.sample(&range))).collect(),
+            w: (0..nin).map(|_| Value::from(rng.sample(range))).collect(),
             b: Value::from(0.0),
             nonlin,
         }
