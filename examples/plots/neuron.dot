@@ -1,0 +1,14 @@
+digraph {
+    node [shape=box]
+    rankdir="LR"    0 [ label = "data=2.1 grad=1.0" ]
+    1 [ label = "data=2.1 grad=1.0" ]
+    2 [ label = "data=2.1 grad=1.0" ]
+    3 [ label = "data=0.3 grad=7.0" ]
+    4 [ label = "data=7.0 grad=0.3" ]
+    5 [ label = "data=0.0 grad=1.0" ]
+    3 -> 2 [ label = "×" ]
+    4 -> 2 [ label = "×" ]
+    2 -> 1 [ label = "+" ]
+    5 -> 1 [ label = "+" ]
+    1 -> 0 [ label = "ReLU" ]
+}
