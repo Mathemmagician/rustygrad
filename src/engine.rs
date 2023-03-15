@@ -12,9 +12,10 @@ use uuid::Uuid;
 pub struct ValueData {
     pub data: f64,
     pub grad: f64,
-    uuid: Uuid,
-    _backward: Option<fn(value: &ValueData)>,
-    _prev: Vec<Value>,
+    pub uuid: Uuid,
+    pub _backward: Option<fn(value: &ValueData)>,
+    pub _prev: Vec<Value>,
+    pub _op: Option<String>,
 }
 
 #[derive(Clone)]
@@ -44,6 +45,7 @@ impl Eq for Value {}
 impl_op_ex!(+ |a: &Value, b: &Value| -> Value {
     let out = Value::from(a.borrow().data + b.borrow().data);
     out.borrow_mut()._prev = vec![a.clone(), b.clone()];
+    out.borrow_mut()._op = Some(String::from("+"));
     out.borrow_mut()._backward = Some(|value: &ValueData| {
         value._prev[0].borrow_mut().grad += value.grad;
         value._prev[1].borrow_mut().grad += value.grad;
@@ -54,6 +56,7 @@ impl_op_ex!(+ |a: &Value, b: &Value| -> Value {
 impl_op_ex!(*|a: &Value, b: &Value| -> Value {
     let out = Value::from(a.borrow().data * b.borrow().data);
     out.borrow_mut()._prev = vec![a.clone(), b.clone()];
+    out.borrow_mut()._op = Some(String::from("×"));
     out.borrow_mut()._backward = Some(|value: &ValueData| {
         let a_data = value._prev[0].borrow().data;
         let b_data = value._prev[1].borrow().data;
@@ -82,6 +85,7 @@ impl ValueData {
             uuid: Uuid::new_v4(),
             _backward: None,
             _prev: Vec::new(),
+            _op: None,
         }
     }
 }
@@ -95,7 +99,7 @@ impl<T: Into<f64>> From<T> for Value {
 impl Debug for Value {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let v = &self.borrow();
-        write!(f, "Value({}, data={}, grad={})", v.uuid, v.data, v.grad)
+        write!(f, "data={} grad={}", v.data, v.grad)
     }
 }
 
@@ -107,6 +111,7 @@ impl Value {
     pub fn relu(&self) -> Value {
         let out = Value::from(self.borrow().data.max(0.0));
         out.borrow_mut()._prev = vec![self.clone()];
+        out.borrow_mut()._op = Some(String::from("ReLU"));
         out.borrow_mut()._backward = Some(|value: &ValueData| {
             value._prev[0].borrow_mut().grad += if value.data > 0.0 { value.grad } else { 0.0 };
         });
@@ -116,6 +121,7 @@ impl Value {
     pub fn pow(&self, power: f64) -> Value {
         let out = Value::from(self.borrow().data.powf(power));
         out.borrow_mut()._prev = vec![self.clone(), Value::from(power)];
+        out.borrow_mut()._op = Some(String::from("**"));
         out.borrow_mut()._backward = Some(|value: &ValueData| {
             let base = value._prev[0].borrow().data;
             let p = value._prev[1].borrow().data;
