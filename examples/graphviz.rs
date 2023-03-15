@@ -1,7 +1,7 @@
 use rustygrad::{Neuron, Value, MLP};
 use uuid::Uuid;
 
-use petgraph::dot::{Dot};
+use petgraph::dot::Dot;
 use petgraph::prelude::{DiGraph, NodeIndex};
 use std::collections::HashMap;
 
@@ -19,13 +19,11 @@ fn value_to_graph_recursive(
         return node_index;
     }
 
-    let node_index = graph.add_node(
-        format!(
-            "data={:.1} grad={:.1}",
-            value.borrow().data,
-            value.borrow().grad
-        ),
-    );
+    let node_index = graph.add_node(format!(
+        "data={:.1} grad={:.1}",
+        value.borrow().data,
+        value.borrow().grad
+    ));
     node_map.insert(uuid, node_index);
 
     for prev_value in value.borrow()._prev.iter() {
@@ -65,7 +63,6 @@ fn create_graphviz(g: &Value, filename: &str) {
 }
 
 fn main() {
-
     let a = Value::from(1.0);
     let b = Value::from(2.0);
     let c = Value::from(3.0);
@@ -74,7 +71,7 @@ fn main() {
     let g = ((&a + &b) * (&c + &d)).pow(2.0);
     create_graphviz(&g, "examples/plots/value.dot");
 
-    // Create a Neuron 
+    // Create a Neuron
     //  With input size of 2
     //  And a ReLu layer
     let neuron = Neuron::new(2, true);
@@ -82,13 +79,12 @@ fn main() {
     let g = &neuron.forward(&vec![Value::from(7.0)]);
     create_graphviz(g, "examples/plots/neuron.dot");
 
-
     // Create a 2x2x1 MLP net:
     //  Input  layer of size 2
     //  Hidden layer of size 2
     //  Ouput  layer of size 1
     let model = MLP::new(2, vec![2, 1]);
-    
+
     // Some input vector of size 2
     let x = vec![Value::from(7.0), Value::from(8.0)];
     // Output Value node
