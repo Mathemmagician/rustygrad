@@ -156,7 +156,7 @@ impl Value {
 
 impl Sum for Value {
     fn sum<I: Iterator<Item = Self>>(mut iter: I) -> Self {
-        let first = iter.nth(0).expect("must contain at least one Value");
+        let first = iter.next().expect("must contain at least one Value");
         iter.fold(first, |acc, val| acc + val)
     }
 }
