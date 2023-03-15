@@ -121,7 +121,7 @@ impl Value {
     pub fn pow(&self, power: f64) -> Value {
         let out = Value::from(self.borrow().data.powf(power));
         out.borrow_mut()._prev = vec![self.clone(), Value::from(power)];
-        out.borrow_mut()._op = Some(String::from("**"));
+        out.borrow_mut()._op = Some(String::from("^"));
         out.borrow_mut()._backward = Some(|value: &ValueData| {
             let base = value._prev[0].borrow().data;
             let p = value._prev[1].borrow().data;
