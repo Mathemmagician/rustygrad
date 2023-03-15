@@ -94,7 +94,7 @@ use rustygrad::{Neuron, MLP};
 
 fn main() {
     // Create a Neuron 
-    //  With input size of 2
+    //  With input size of 2 (1 normal weight and 1 bias)
     //  With ReLu layer (true)
     let neuron = Neuron::new(2, true);
 

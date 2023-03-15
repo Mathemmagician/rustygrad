@@ -72,7 +72,7 @@ fn main() {
     create_graphviz(&g, "examples/plots/value.dot");
 
     // Create a Neuron
-    //  With input size of 2
+    //  With input size of 2 (1 normal weight and 1 bias)
     //  And a ReLu layer
     let neuron = Neuron::new(2, true);
     // Output node
