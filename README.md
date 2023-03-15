@@ -10,6 +10,11 @@ Inspired by Andrej Karpathy's [micrograd](https://github.com/karpathy/micrograd)
 
 The engine and the neural net are implemented in about 150 and 100 lines of code respectively (vs Andrej's 100 and 50)! About twice as long, but twice as fast!
 
+#### Installation
+```
+cargo add rustygrad
+```
+
 #### Example usage
 
 ##### Value API
