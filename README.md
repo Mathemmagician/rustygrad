@@ -187,3 +187,8 @@ cargo run --example mlp
 ```
 cargo test
 ```
+
+#### How To Build?
+
+If building Rustygrad from scratch something you are curious about check out [Rustygrad-from-scratch](https://github.com/Mathemmagician/rustygrad-from-scratch)
+
