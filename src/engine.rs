@@ -69,7 +69,7 @@ impl_op_ex!(*|a: &Value, b: &Value| -> Value {
 impl_op_ex_commutative!(+|a: &Value, b: f64| -> Value { a + Value::from(b) });
 impl_op_ex_commutative!(*|a: &Value, b: f64| -> Value { a * Value::from(b) });
 
-impl_op!(-|a: &Value| -> Value { a * (-1.0) });
+impl_op_ex!(-|a: &Value| -> Value { a * (-1.0) });
 impl_op_ex!(-|a: &Value, b: &Value| -> Value { a + (-b) });
 impl_op_ex!(/ |a: &Value, b: &Value| -> Value { a * b.pow(-1.0) });
 impl_op_ex!(+= |a: &mut Value, b: &Value| { *a = &*a + b });
