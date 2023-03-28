@@ -8,7 +8,7 @@ Inspired by Andrej Karpathy's [micrograd](https://github.com/karpathy/micrograd)
 2. an easy-to-understand implementation
 3. in a minimal amount of code
 
-The engine and the neural net are implemented in about 150 and 100 lines of code respectively (vs Andrej's 100 and 50)! About twice as long, but twice as fast!
+The engine and the neural net are implemented in about 150 and 100 lines of code respectively (vs Andrej's 100 and 50)! About twice as long, but 5 times as fast!
 
 #### Installation
 ```
