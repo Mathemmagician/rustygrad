@@ -35,7 +35,7 @@ fn main() {
     let d = Value::from(4.0);
 
     let g = ((&a + &b) * (&c + &d)).pow(2.0);
-    g.backwards();  // compute gradients
+    g.backward();  // compute gradients
 }
 ```
 
